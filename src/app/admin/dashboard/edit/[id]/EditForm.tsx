@@ -52,6 +52,29 @@ export default function EditConsignmentForm({ data }: { data: any }) {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="input-group">
+              <label className="label">Customer Name</label>
+              <input 
+                name="customer_name" 
+                type="text" 
+                defaultValue={data.customer_name}
+                className="input" 
+                required 
+              />
+            </div>
+            <div className="input-group">
+              <label className="label">Customer Phone (WhatsApp)</label>
+              <input 
+                name="customer_phone" 
+                type="tel" 
+                defaultValue={data.customer_phone}
+                className="input" 
+                required 
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="input-group">
               <label className="label">Tracking Number</label>
               <input 
                 name="tracking_number" 
@@ -66,6 +89,8 @@ export default function EditConsignmentForm({ data }: { data: any }) {
               <label className="label">Status</label>
                <select name="status" className="input bg-white h-[46px]" defaultValue={data.status}>
                 <option value="Booked">Booked</option>
+                <option value="Scheduled">Scheduled</option>
+                <option value="Loading">Loading</option>
                 <option value="In Transit">In Transit</option>
                 <option value="Delayed">Delayed</option>
                 <option value="Out for Delivery">Out for Delivery</option>

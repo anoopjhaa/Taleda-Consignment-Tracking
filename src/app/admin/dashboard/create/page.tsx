@@ -44,6 +44,29 @@ export default function CreateConsignmentPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Customer Name</label>
+              <input 
+                name="customer_name" 
+                type="text" 
+                placeholder="Full Name"
+                className="input" 
+                required 
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Customer Phone (WhatsApp)</label>
+              <input 
+                name="customer_phone" 
+                type="tel" 
+                placeholder="+91 XXXXX XXXXX"
+                className="input" 
+                required 
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Tracking Number</label>
               <input 
                 name="tracking_number" 
@@ -58,6 +81,8 @@ export default function CreateConsignmentPage() {
               <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
                <select name="status" className="input bg-white h-[46px]" defaultValue="Booked">
                 <option value="Booked">Booked</option>
+                <option value="Scheduled">Scheduled</option>
+                <option value="Loading">Loading</option>
                 <option value="In Transit">In Transit</option>
                 <option value="Delayed">Delayed</option>
                 <option value="Out for Delivery">Out for Delivery</option>

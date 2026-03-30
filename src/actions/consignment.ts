@@ -16,6 +16,9 @@ export async function createConsignment(formData: FormData) {
   const eta_input = formData.get('eta') as string; // Days or Date
   const dispatch_input = formData.get('dispatch_date') as string; // Date
 
+  const customer_phone = formData.get('customer_phone') as string;
+  const customer_name = formData.get('customer_name') as string;
+
   if (!tracking_number || !sender_city || !receiver_city || !eta_input) {
     return { error: 'Missing required fields' };
   }
@@ -59,7 +62,9 @@ export async function createConsignment(formData: FormData) {
       status,
       eta_date: eta_date.toISOString(),
       dispatch_date: dispatch_date.toISOString(),
-      distance_km
+      distance_km,
+      customer_phone,
+      customer_name
     });
 
   if (error) {
@@ -86,6 +91,9 @@ export async function updateConsignment(formData: FormData) {
   const eta_input = formData.get('eta') as string;
   const dispatch_input = formData.get('dispatch_date') as string;
 
+  const customer_phone = formData.get('customer_phone') as string;
+  const customer_name = formData.get('customer_name') as string;
+
   if (!id) return { error: 'Missing ID' };
 
   // Re-geocode
@@ -108,6 +116,8 @@ export async function updateConsignment(formData: FormData) {
       if (!isNaN(days)) eta_date = new Date(dispatch_date.getTime() + days * 24 * 60 * 60 * 1000);
   }
 
+  const { data: oldData } = await supabase.from('consignments').select('status').eq('id', id).single();
+
   const { error } = await supabase
     .from('consignments')
     .update({
@@ -119,13 +129,28 @@ export async function updateConsignment(formData: FormData) {
       status,
       eta_date: eta_date.toISOString(),
       dispatch_date: dispatch_date.toISOString(),
-      distance_km
+      distance_km,
+      customer_phone,
+      customer_name
     })
     .eq('id', id);
 
   if (error) {
       console.error(error);
       return { error: 'Update failed' };
+  }
+  
+  // 🛡️ WhatsApp Trigger for Full Edit
+  if (oldData?.status !== status && customer_phone && customer_name) {
+    const { sendWhatsAppStatusUpdate } = require('@/lib/whatsapp');
+    sendWhatsAppStatusUpdate(
+      customer_phone,
+      customer_name,
+      status,
+      tracking_number,
+      sender_city,
+      receiver_city
+    );
   }
   
   revalidatePath('/admin/dashboard');
@@ -154,6 +179,17 @@ export async function updateConsignmentStatus(id: number, status: string) {
   const session = await getSession();
   if (!session) return { error: 'Unauthorized' };
 
+  // Fetch consignment data for notification before update
+  const { data: consignment, error: fetchError } = await supabase
+    .from('consignments')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (fetchError || !consignment) {
+    return { error: 'Consignment not found' };
+  }
+
   const { error } = await supabase
     .from('consignments')
     .update({ status })
@@ -162,6 +198,19 @@ export async function updateConsignmentStatus(id: number, status: string) {
   if (error) {
     console.error(error);
     return { error: 'Update failed' };
+  }
+
+  // 🛡️ WhatsApp Trigger: Send update if customer details exist
+  if (consignment.customer_phone && consignment.customer_name) {
+     const { sendWhatsAppStatusUpdate } = require('@/lib/whatsapp');
+     sendWhatsAppStatusUpdate(
+       consignment.customer_phone,
+       consignment.customer_name,
+       status,
+       consignment.tracking_number,
+       consignment.sender_city,
+       consignment.receiver_city
+     );
   }
 
   revalidatePath('/admin/dashboard');
